@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-var token string = ""
 var url string = ""
 
 type Response struct {
@@ -53,9 +52,9 @@ func (a *API) getToken() {
 	}
 
 	json.NewDecoder(res.Body).Decode(&body)
-	token = body.Token
+	a.token = body.Token
 
-	fmt.Println("Got token from sipgate api: ", token)
+	fmt.Println("Got token from sipgate api: ", a.token)
 }
 
 func (a *API) setPushUrl() {
@@ -63,7 +62,7 @@ func (a *API) setPushUrl() {
 	json.NewEncoder(b).Encode(map[string]string{"incomingUrl": url, "outgoingUrl": url})
 
 	req, _ := http.NewRequest("PUT", "https://api.sipgate.com/v1/settings/sipgateio", b)
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.token))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
 	client := &http.Client{}
