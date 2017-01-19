@@ -20,12 +20,8 @@ type Response struct {
 	Dial   string `xml:"Dial>Number"`
 }
 
-/*
-
- */
-
 type Tunnels struct {
-	Tunnel  []Tunnel `json:"tunnels"`
+	Tunnel []Tunnel `json:"tunnels"`
 }
 
 type Tunnel struct {
@@ -37,33 +33,32 @@ type SipgateIoUrls struct {
 	OutgoingUrl string `json:"outgoingUrl"`
 }
 
-func main() {
-	var user string = os.Args[1]
-	var pw string = os.Args[2]
-
-	GetUrlFromNgrok()
-	APIgetToken(user, pw)
-	APIsetPushUrl()
-	http.HandleFunc("/", foo)
-	http.ListenAndServe(":3000", nil)
+type API struct {
+	user     string
+	password string
+	token    string
 }
 
-func APIgetToken(user string, pw string) {
+func (a *API) getToken() {
 	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(map[string]string{"username": user, "password": pw})
+	json.NewEncoder(b).Encode(map[string]string{"username": a.user, "password": a.password})
 	res, err := http.Post("https://api.sipgate.com/v1/authorization/token", "application/json; charset=utf-8", b)
+
 	if err != nil {
 		panic(err)
 	}
+
 	var body struct {
 		Token string `json:"token"`
 	}
 
 	json.NewDecoder(res.Body).Decode(&body)
 	token = body.Token
+
+	fmt.Println("Got token from sipgate api: ", token)
 }
 
-func APIsetPushUrl() {
+func (a *API) setPushUrl() {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(map[string]string{"incomingUrl": url, "outgoingUrl": url})
 
@@ -79,6 +74,17 @@ func APIsetPushUrl() {
 	}
 	defer r.Body.Close()
 }
+
+func main() {
+	api := &API{user:os.Args[1], password:os.Args[2]}
+	api.getToken()
+	api.setPushUrl()
+	GetUrlFromNgrok()
+
+	http.HandleFunc("/", pushApiResponseHandler)
+	http.ListenAndServe(":3000", nil)
+}
+
 
 func GetUrlFromNgrok() {
 	tunnels := &Tunnels{}
@@ -102,10 +108,10 @@ func GetUrlFromNgrok() {
 		}
 	}
 
-	fmt.Println("Found ngrok url", url)
+	fmt.Println("Found ngrok url: ", url)
 }
 
-func foo(w http.ResponseWriter, r *http.Request) {
+func pushApiResponseHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	log.Println(r.Form)
 
