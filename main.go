@@ -13,8 +13,8 @@ import (
 	"strconv"
 )
 
-const devUrl string = "https://api.dev.sipgate.com/login/sipgate-apps/protocol/openid-connect/token"
-const liveUrl string = "https://api.sipgate.com/login/sipgate-apps/protocol/openid-connect/token"
+const openIdUrl string = "login/sipgate-apps/protocol/openid-connect/token"
+const settingsPushApiUrl string = "v1/settings/sipgateio"
 
 type PushApiResponse struct {
 	Answer string `xml:"onAnswer,attr"`
@@ -41,6 +41,16 @@ type API struct {
 	AccessToken string
 	PushApiUrl  string
 	Env         string
+	ApiBaseUrl  string
+}
+
+func (a *API) setEnv() {
+	if a.Env == "dev" {
+		a.ApiBaseUrl = "https://api.dev.sipgate.com/"
+		return
+	}
+
+	a.ApiBaseUrl = "https://api.sipgate.com/"
 }
 
 func (a *API) GetSipgateApiToken() string {
@@ -51,7 +61,7 @@ func (a *API) GetSipgateApiToken() string {
 	payload.Add("grant_type", "password")
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", liveUrl, bytes.NewBufferString(payload.Encode()))
+	req, _ := http.NewRequest("POST", a.ApiBaseUrl + openIdUrl , bytes.NewBufferString(payload.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Content-Length", strconv.Itoa(len(payload.Encode())))
 
@@ -108,7 +118,7 @@ func (a *API) SetPushApiUrl() {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(map[string]string{"incomingUrl": a.PushApiUrl, "outgoingUrl": a.PushApiUrl})
 
-	req, _ := http.NewRequest("PUT", "https://api.sipgate.com/v1/settings/sipgateio", b)
+	req, _ := http.NewRequest("PUT", a.ApiBaseUrl + settingsPushApiUrl, b)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.AccessToken))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
@@ -156,6 +166,7 @@ func main() {
 	}
 
 	api := &API{user:*email, password:*password, Env:*env}
+	api.setEnv()
 	api.GetNgrokUrl()
 	api.GetSipgateApiToken()
 	api.SetPushApiUrl()
