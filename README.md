@@ -4,7 +4,7 @@ start ngrok
 ngrok http 3000 --region=eu
 ```
 
-run script:
+run io-helper:
 
 ```
 go run main.go
