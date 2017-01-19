@@ -40,10 +40,14 @@ type API struct {
 func (a *API) GetSipgateApiToken() string {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(map[string]string{"username": a.user, "password": a.password})
-	res, err := http.Post("https://api.sipgate.com/v1/authorization/Token", "application/json; charset=utf-8", b)
+	res, err := http.Post("https://api.sipgate.com/v1/authorization/token", "application/json; charset=utf-8", b)
 
 	if err != nil {
 		panic(err)
+	}
+
+	if res.StatusCode != 200 {
+		panic("Got wrong status code during token request")
 	}
 
 	var body struct {
