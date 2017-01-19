@@ -7,7 +7,7 @@ ngrok http 3000 --region=eu
 run io-helper:
 
 ```
-go run main.go your_email@domain.tld web_password
+go run main.go -email=your_email@domain.tld -password=12345678 -env=live
 ```
 
 Output:
