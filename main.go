@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type Response struct {
+type PushApiResponse struct {
 	Answer string `xml:"onAnswer,attr"`
 	Hangup string `xml:"onHangup,attr"`
 	Dial   string `xml:"Dial>Number"`
@@ -25,7 +25,7 @@ type Tunnel struct {
 	PublicUrl string `json:"public_url"`
 }
 
-type SipgateIoUrls struct {
+type PushApiUrls struct {
 	IncomingUrl string `json:"incomingUrl"`
 	OutgoingUrl string `json:"outgoingUrl"`
 }
@@ -37,7 +37,7 @@ type API struct {
 	PushApiUrl string
 }
 
-func (a *API) GetAccessToken() string {
+func (a *API) GetSipgateApiToken() string {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(map[string]string{"username": a.user, "password": a.password})
 	res, err := http.Post("https://api.sipgate.com/v1/authorization/Token", "application/json; charset=utf-8", b)
@@ -85,7 +85,7 @@ func (a *API) GetNgrokUrl() {
 
 func (a *API) SetPushApiUrl() {
 	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(map[string]string{"incomingUrl": url, "outgoingUrl": url})
+	json.NewEncoder(b).Encode(map[string]string{"incomingUrl": a.PushApiUrl, "outgoingUrl": a.PushApiUrl})
 
 	req, _ := http.NewRequest("PUT", "https://api.sipgate.com/v1/settings/sipgateio", b)
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.Token))
@@ -97,6 +97,7 @@ func (a *API) SetPushApiUrl() {
 	if err != nil {
 		panic(err)
 	}
+
 	defer r.Body.Close()
 }
 
@@ -104,7 +105,7 @@ func (a *API) pushApiResponseHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	log.Println(r.Form)
 
-	response := Response{Answer: a.PushApiUrl, Hangup: a.PushApiUrl}
+	response := PushApiResponse{Answer: a.PushApiUrl, Hangup: a.PushApiUrl}
 
 	x, err := xml.MarshalIndent(response, "", "  ")
 	if err != nil {
@@ -118,7 +119,7 @@ func (a *API) pushApiResponseHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	api := &API{user:os.Args[1], password:os.Args[2]}
-	api.GetAccessToken()
+	api.GetSipgateApiToken()
 	api.SetPushApiUrl()
 	api.GetNgrokUrl()
 
