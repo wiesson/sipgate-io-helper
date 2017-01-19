@@ -16,10 +16,10 @@ import (
 const openIdUrl string = "login/sipgate-apps/protocol/openid-connect/token"
 const settingsPushApiUrl string = "v1/settings/sipgateio"
 
-type PushApiResponse struct {
+type Response struct {
 	Answer string `xml:"onAnswer,attr"`
 	Hangup string `xml:"onHangup,attr"`
-	Dial   string `xml:"Dial>Number"`
+	// Dial   string `xml:"Dial>Number"`
 }
 
 type Tunnels struct {
@@ -136,9 +136,9 @@ func (a *API) pushApiResponseHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	log.Println(r.Form)
 
-	response := PushApiResponse{Answer: a.PushApiUrl, Hangup: a.PushApiUrl}
+	pushApiResponse := &Response{Answer: a.PushApiUrl, Hangup: a.PushApiUrl}
 
-	x, err := xml.MarshalIndent(response, "", "  ")
+	x, err := xml.MarshalIndent(pushApiResponse, "", "  ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
