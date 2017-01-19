@@ -115,7 +115,7 @@ func pushApiResponseHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	log.Println(r.Form)
 
-	response := Response{Answer: url, Hangup: url, Dial: "491751109743"}
+	response := Response{Answer: url, Hangup: url}
 
 	x, err := xml.MarshalIndent(response, "", "  ")
 	if err != nil {
