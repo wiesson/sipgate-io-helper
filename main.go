@@ -11,6 +11,7 @@ import (
 	"flag"
 	"net/url"
 	"strconv"
+	"os"
 )
 
 const openIdUrl string = "login/sipgate-apps/protocol/openid-connect/token"
@@ -84,7 +85,7 @@ func (a *API) GetSipgateApiToken() string {
 	json.NewDecoder(res.Body).Decode(&responseBody)
 	a.AccessToken = responseBody.AccessToken
 
-	fmt.Println("Got AccessToken from sipgate api: ", a.AccessToken)
+	fmt.Print("Got AccessToken from sipgate api: \n\n", a.AccessToken, "\n\n")
 
 	return a.AccessToken
 }
@@ -92,11 +93,13 @@ func (a *API) GetSipgateApiToken() string {
 func (a *API) GetNgrokUrl() {
 	tunnels := &Tunnels{}
 	response, err := http.Get("http://127.0.0.1:4040/api/tunnels")
-	defer response.Body.Close()
 
 	if err != nil {
-		panic(err)
+		fmt.Println("Can't find local ngrok")
+		os.Exit(0)
 	}
+
+	defer response.Body.Close()
 
 	err = json.NewDecoder(response.Body).Decode(tunnels)
 
@@ -152,23 +155,29 @@ func main() {
 	email := flag.String("email", "username", "Your sipgate email address")
 	password := flag.String("password", "password", "The password for your sipgate account")
 	env := flag.String("env", "dev", "dev, live")
+	token := flag.Bool("token", false, "Request an access token only")
 
 	flag.Parse()
 
 	if *email == "username" {
 		fmt.Println("Please enter your username")
-		return
+		os.Exit(0)
 	}
 
 	if *password == "password" {
 		fmt.Println("Please enter your password")
-		return
+		os.Exit(0)
 	}
 
 	api := &API{user:*email, password:*password, Env:*env}
 	api.setEnv()
-	api.GetNgrokUrl()
 	api.GetSipgateApiToken()
+
+	if *token {
+		return
+	}
+
+	api.GetNgrokUrl()
 	api.SetPushApiUrl()
 
 	fmt.Print("\n\n")
