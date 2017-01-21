@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"flag"
 	"net/url"
 	"strconv"
 	"os"
+	"sort"
+	"time"
 )
 
 const openIdUrl string = "login/sipgate-apps/protocol/openid-connect/token"
@@ -137,7 +138,22 @@ func (a *API) SetPushApiUrl() {
 
 func (a *API) pushApiResponseHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	log.Println(r.Form)
+
+	keys := make([]string, 0, len(r.Form))
+
+	for key := range r.Form {
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+
+	fmt.Print(time.Now())
+
+	for _, k := range keys {
+		fmt.Print(" ", k, ": ", r.Form[k])
+	}
+
+	fmt.Print("\n")
 
 	pushApiResponse := &Response{Answer: a.PushApiUrl, Hangup: a.PushApiUrl}
 
