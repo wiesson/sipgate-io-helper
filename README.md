@@ -8,7 +8,7 @@ cd $GOPATH/src/github.com/wiesson/sipgate-io-helper
 go install
 ```
 
-or download the binary (coming soon)
+or download the binary (coming soon (maybe))
 
 ### Usage
 
