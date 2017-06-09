@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"crypto/tls"
 	"strings"
 	"flag"
 	"net/url"
@@ -62,7 +63,11 @@ func (a *API) GetSipgateApiToken() string {
 	payload.Add("password", a.password)
 	payload.Add("grant_type", "password")
 
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr}
 	req, _ := http.NewRequest("POST", a.ApiBaseUrl + openIdUrl , bytes.NewBufferString(payload.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Content-Length", strconv.Itoa(len(payload.Encode())))
@@ -126,7 +131,10 @@ func (a *API) SetPushApiUrl() {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.AccessToken))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
 	r, err := client.Do(req)
 
 	if err != nil {
